@@ -4,6 +4,8 @@ import { LatestPost } from "~/app/_components/post";
 import { getServerAuthSession } from "~/server/auth";
 import { api, HydrateClient } from "~/trpc/server";
 
+import { ModeToggle } from "./_components/ModeToggle/ModeToggle";
+
 export default async function Home() {
   const hello = await api.post.hello({ text: "from tRPC" });
   const session = await getServerAuthSession();
@@ -17,6 +19,7 @@ export default async function Home() {
           <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
             Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
           </h1>
+          <ModeToggle />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
             <Link
               className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
