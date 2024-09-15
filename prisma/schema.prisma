@@ -60,6 +60,7 @@ model User {
     email         String?   @unique
     emailVerified DateTime?
     image         String?
+    status        Status @default(OFFLINE)
     accounts      Account[]
     sessions      Session[]
     posts         Post[]
@@ -71,4 +72,11 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+enum Status {
+    ONLINE
+    OFFLINE
+    IDLE
+    MUTE
 }
