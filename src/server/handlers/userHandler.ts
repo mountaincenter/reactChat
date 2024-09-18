@@ -1,4 +1,5 @@
 import { PrismaClient, type User, type Status } from "@prisma/client";
+import { pusher } from "~/server/service/pusher";
 
 const prisma = new PrismaClient();
 
@@ -30,13 +31,18 @@ export const userHandler = {
 
   updateStatus: async (userId: string, status: Status) => {
     try {
-      // statusフィールドのみを更新
-      return await prisma.user.update({
+      const updatedUser = await prisma.user.update({
         where: { id: userId },
-        data: {
-          status: status, // Statusだけを更新
-        },
+        data: { status },
       });
+
+      void pusher.trigger("user-channel", "status-update", {
+        userId: updatedUser.id,
+        status: updatedUser.status,
+      });
+
+      // statusフィールドのみを更新
+      return updatedUser;
     } catch (error) {
       console.error("Error updating user status:", error);
       throw new Error("Could not update user status");

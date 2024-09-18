@@ -17,6 +17,9 @@ services:
     ports:
       - 3000:3000
     command: npm run dev
+    environment:
+      - NEXT_PUBLIC_PUSHER_KEY=${NEXT_PUBLIC_PUSHER_KEY}
+      - NEXT_PUBLIC_PUSHER_CLUSTER=${NEXT_PUBLIC_PUSHER_CLUSTER}
 
   prisma-studio:
     <<: *common

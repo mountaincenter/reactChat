@@ -1,11 +1,13 @@
 import "~/styles/globals.css";
-
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
-
-import { TRPCReactProvider } from "~/trpc/react";
-
 import { ThemeProvider } from "../components/theme-provider";
+import SessionProviderWrapper from "~/components/SessionProviderWrapper";
+import Head from "next/head";
+import Script from "next/script";
+import PusherBeamsClient from "./PusherBeamsClent";
+import { Toaster } from "~/components/ui/toaster";
+import { getServerAuthSession } from "~/server/auth";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -13,11 +15,36 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-export default function RootLayout({
+type IconDescriptor = {
+  rel: string;
+  url?: string;
+};
+
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const session = await getServerAuthSession();
   return (
     <html lang="en" className={`${GeistSans.variable}`}>
+      <Head>
+        {/* 他の head 内のメタ情報 */}
+        <title>{metadata.title?.toString() ?? ""}</title>{" "}
+        {/* 修正: titleの型エラー */}
+        <meta name="description" content={metadata.description ?? ""} />{" "}
+        {/* 修正: descriptionの型エラー */}
+        {metadata.icons !== undefined &&
+          Array.isArray(metadata.icons) &&
+          metadata.icons.length > 0 && (
+            <link
+              rel="icon"
+              href={
+                typeof metadata.icons[0] === "string"
+                  ? metadata.icons[0]
+                  : ((metadata.icons[0] as IconDescriptor).url ?? "")
+              }
+            />
+          )}
+      </Head>
       <body>
         <ThemeProvider
           attribute="class"
@@ -25,7 +52,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <SessionProviderWrapper session={session}>
+            {children}
+            <Toaster />
+          </SessionProviderWrapper>
+          <PusherBeamsClient />
+          {/* 非同期でPusher BeamsのSDKをロード */}
+          <Script
+            src="https://js.pusher.com/beams/1.0/push-notifications-cdn.js"
+            strategy="lazyOnload" // ページ読み込み後に非同期でロード
+          />
         </ThemeProvider>
       </body>
     </html>
