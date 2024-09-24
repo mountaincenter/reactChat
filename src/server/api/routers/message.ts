@@ -12,9 +12,16 @@ const pusher = new Pusher({
   useTLS: true,
 });
 
+// メッセージとファイル情報のバリデーションスキーマを定義
+const fileSchema = z.object({
+  url: z.string(), // ファイルのURL
+  fileType: z.enum(["IMAGE", "DOCUMENT", "PDF", "VIDEO", "AUDIO"]), // ファイルタイプ
+});
+
 const messageCreateSchema = z.object({
   content: z.string(),
   conversationId: z.string(),
+  files: z.array(fileSchema).optional(),
 });
 
 export const messageRouter = createTRPCRouter({
@@ -31,8 +38,10 @@ export const messageRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       // メッセージをDBに保存
       const newMessage = await messageHandler.createMessage({
-        ...input,
+        content: input.content ?? "",
+        conversationId: input.conversationId,
         senderId: ctx.session.user.id,
+        files: input.files,
       });
 
       // Pusherでクライアントにメッセージ送信を通知

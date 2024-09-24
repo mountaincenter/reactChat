@@ -40,10 +40,23 @@ export const useMessageMutation = (conversationId: string) => {
     };
   }, [refetchMessages, conversationId, status]);
 
-  const createMessage = (data: { content: string; senderId: string }) => {
-    createMessageMutation.mutate({ ...data, conversationId }); // 新しいメッセージを作成
-  };
+  // メッセージを作成する関数（ファイル対応）
+  const createMessage = (data: {
+    content: string;
+    senderId: string;
+    file?: File;
+  }) => {
+    const formData = new FormData();
+    formData.append("content", data.content);
+    formData.append("senderId", data.senderId);
+    formData.append("conversationId", conversationId);
 
+    if (data.file) {
+      formData.append("file", data.file); // ファイルがある場合、FormDataに追加
+    }
+
+    createMessageMutation.mutate({ ...data, conversationId, formData }); // 新しいメッセージを作成
+  };
   const updateMessage = (
     id: string,
     content: string,

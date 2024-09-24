@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import type { FileType } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -19,10 +20,22 @@ export const messageHandler = {
     content: string;
     conversationId: string;
     senderId: string;
+    files?: { url: string; fileType: FileType }[]; // ファイル情報を追加
   }) => {
     try {
       return await prisma.message.create({
-        data: messageData,
+        data: {
+          ...messageData,
+          files: {
+            create: messageData.files?.map((file) => ({
+              url: file.url,
+              fileType: file.fileType,
+            })),
+          },
+        },
+        include: {
+          files: true, // ファイルを含める
+        },
       });
     } catch (error) {
       console.error("Error creating message:", error);

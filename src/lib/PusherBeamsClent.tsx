@@ -6,7 +6,7 @@ import * as PusherPushNotifications from "@pusher/push-notifications-web";
 export default function PusherBeamsClient() {
   useEffect(() => {
     const beamsClient = new PusherPushNotifications.Client({
-      instanceId: "6f91e381-1a86-42c0-b0e5-80e4ab376637",
+      instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
     });
 
     beamsClient

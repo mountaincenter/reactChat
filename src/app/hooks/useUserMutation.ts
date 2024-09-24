@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import Pusher from "pusher-js";
+// import Pusher from "pusher-js";
 import { api } from "~/trpc/react";
 import { useSession } from "next-auth/react";
 import type { Status } from "@prisma/client";
@@ -31,27 +31,27 @@ export const useUserMutation = () => {
   useEffect(() => {
     if (status !== "authenticated") return; // 認証されていない場合は何もしない
 
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-    });
+    // const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+    //   cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    // });
 
-    const channel = pusher.subscribe("user-channel");
+    // const channel = pusher.subscribe("user-channel");
 
-    const handleStatusUpdate = async (data: {
-      userId: string;
-      status: Status;
-    }) => {
-      if (user?.id === data.userId) {
-        await refetchUser();
-      }
-    };
+    // const handleStatusUpdate = async (data: {
+    //   userId: string;
+    //   status: Status;
+    // }) => {
+    //   if (user?.id === data.userId) {
+    //     await refetchUser();
+    //   }
+    // };
 
-    channel.bind("status-update", handleStatusUpdate);
+    // channel.bind("status-update", handleStatusUpdate);
 
-    return () => {
-      channel.unbind("status-update", handleStatusUpdate);
-      pusher.unsubscribe("user-channel");
-    };
+    // return () => {
+    //   channel.unbind("status-update", handleStatusUpdate);
+    //   pusher.unsubscribe("user-channel");
+    // };
   }, [user, refetchUser, status]);
 
   const isLoading = isUserLoading || isUsersLoading;

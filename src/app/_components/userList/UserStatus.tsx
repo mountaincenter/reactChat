@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Pusher from "pusher-js";
+// import Pusher from "pusher-js";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import type { Status } from "@prisma/client";
 
@@ -54,27 +54,23 @@ const UserStatus: React.FC<UserProps> = ({ user }) => {
 
   useEffect(() => {
     // Pusherの初期設定
-    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
-    });
-
-    const channel = pusher.subscribe("user-channel");
-
-    const handleStatusUpdate = (data: { userId: string; status: Status }) => {
-      // ユーザーIDが一致する場合のみステータスを更新
-      if (data.userId === user.id) {
-        setLocalStatus(data.status);
-      }
-    };
-
-    // リアルタイムのステータス変更イベントを監視
-    channel.bind("status-update", handleStatusUpdate);
-
-    // コンポーネントがアンマウントされた時にPusherの購読を解除
-    return () => {
-      channel.unbind("status-update", handleStatusUpdate);
-      pusher.unsubscribe("user-channel");
-    };
+    // const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+    //   cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    // });
+    // const channel = pusher.subscribe("user-channel");
+    // const handleStatusUpdate = (data: { userId: string; status: Status }) => {
+    //   // ユーザーIDが一致する場合のみステータスを更新
+    //   if (data.userId === user.id) {
+    //     setLocalStatus(data.status);
+    //   }
+    // };
+    // // リアルタイムのステータス変更イベントを監視
+    // channel.bind("status-update", handleStatusUpdate);
+    // // コンポーネントがアンマウントされた時にPusherの購読を解除
+    // return () => {
+    //   channel.unbind("status-update", handleStatusUpdate);
+    //   pusher.unsubscribe("user-channel");
+    // };
   }, [user.id]);
 
   return (
