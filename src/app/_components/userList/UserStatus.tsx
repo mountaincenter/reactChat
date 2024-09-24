@@ -1,11 +1,29 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import Pusher from "pusher-js"; // Pusherをインポート
+import Pusher from "pusher-js";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import type { Status, User } from "@prisma/client";
+import type { Status } from "@prisma/client";
+
+interface Conversation {
+  id: string;
+  name: string | null;
+}
+
+interface UserWithConversations {
+  id: string;
+  name: string | null;
+  email: string | null;
+  emailVerified: Date | null;
+  image: string | null;
+  status: Status;
+  idleTimeout: number;
+  defaultStatus: string;
+  conversations?: Conversation[]; // conversationsをオプショナルにする
+}
 
 interface UserProps {
-  user: User;
+  user: UserWithConversations;
 }
 
 // アイコンの色をステータスに基づいて変更するためのマッピング
@@ -18,7 +36,7 @@ const getStatusColor = (status: Status | undefined) => {
     case "MUTE":
       return "bg-red-500";
     default:
-      return "bg-gray-500"; // デフォルトの色
+      return "bg-gray-500";
   }
 };
 
@@ -45,7 +63,7 @@ const UserStatus: React.FC<UserProps> = ({ user }) => {
     const handleStatusUpdate = (data: { userId: string; status: Status }) => {
       // ユーザーIDが一致する場合のみステータスを更新
       if (data.userId === user.id) {
-        setLocalStatus(data.status); // リアルタイムでUIを更新
+        setLocalStatus(data.status);
       }
     };
 
@@ -60,7 +78,7 @@ const UserStatus: React.FC<UserProps> = ({ user }) => {
   }, [user.id]);
 
   return (
-    <div className="flex max-w-sm items-center space-x-4 rounded-lg p-4 shadow-md">
+    <div className="flex cursor-pointer items-center space-x-4 rounded-lg border p-4 shadow-md hover:bg-accent">
       <div className="relative">
         <Avatar className="h-12 w-12">
           {user?.image && <AvatarImage src={user.image} alt="User avatar" />}
@@ -69,14 +87,13 @@ const UserStatus: React.FC<UserProps> = ({ user }) => {
         {/* ステータスに応じた色のアイコン */}
         <span
           className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${getStatusColor(
-            localStatus, // Pusherを通じて更新されたステータスを使用
+            localStatus,
           )}`}
         ></span>
       </div>
-      <div>
-        <h2 className="text-lg font-semibold">{user?.name}</h2>
-        <p className="text-sm">{localStatus}</p>{" "}
-        {/* リアルタイムで更新されたステータス */}
+      <div className="flex-1">
+        <h2 className="text-sm font-medium leading-none">{user?.name}</h2>
+        <p className="text-sm text-muted-foreground">{localStatus}</p>
       </div>
     </div>
   );

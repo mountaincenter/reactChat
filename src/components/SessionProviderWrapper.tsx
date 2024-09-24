@@ -24,11 +24,11 @@ const SessionProviderWrapper: React.FC<SessionProviderWrapperProps> = ({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex w-full justify-center">
-            <Header />
-          </div>
-          <div className="flex w-full flex-1 flex-col items-center justify-center px-4">
-            {children}
+          <div className="flex h-screen w-full flex-col">
+            <Header /> {/* Header at the top */}
+            <div className="flex w-full justify-center overflow-auto">
+              {children} {/* Main content below */}
+            </div>
           </div>
         </ThemeProvider>
       </TRPCReactProvider>

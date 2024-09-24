@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarImage, AvatarFallback } from "~/components/ui/avatar";
@@ -39,6 +39,7 @@ const LoginAvatar: React.FC = () => {
     user?.status,
   );
   const router = useRouter();
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (user?.status) {
@@ -60,11 +61,57 @@ const LoginAvatar: React.FC = () => {
   // セッションに応じてステータスを自動更新
   useEffect(() => {
     if (status === "authenticated" && user?.status === "OFFLINE") {
-      handleStatusChange("ONLINE"); // セッションが開始されたらステータスをオンラインに
+      handleStatusChange(user?.defaultStatus ?? "ONLINE"); // 初期ステータスを反映
     } else if (status === "unauthenticated" && user?.status !== "OFFLINE") {
       handleStatusChange("OFFLINE"); // セッションが終了したらステータスをオフラインに
     }
-  }, [status, user?.status, handleStatusChange]);
+  }, [status, user?.status, user?.defaultStatus, handleStatusChange]);
+
+  useEffect(() => {
+    if (localStatus === "ONLINE") {
+      const resetIdleTimer = () => {
+        if (idleTimerRef.current) {
+          clearTimeout(idleTimerRef.current); // 古いタイマーをクリア
+        }
+        idleTimerRef.current = setTimeout(() => {
+          // localStatusが"ONLINE"または"IDLE"の場合にのみIDLEに変更
+          if (localStatus === "ONLINE" || localStatus === "IDLE") {
+            handleStatusChange("IDLE");
+          }
+        }, user?.idleTimeout); // ユーザー設定のidleTimeoutを使用
+      };
+
+      window.addEventListener("mousemove", resetIdleTimer);
+      window.addEventListener("keydown", resetIdleTimer);
+
+      resetIdleTimer(); // 初期化
+
+      return () => {
+        window.removeEventListener("mousemove", resetIdleTimer);
+        window.removeEventListener("keydown", resetIdleTimer);
+        if (idleTimerRef.current) {
+          clearTimeout(idleTimerRef.current); // クリーンアップ
+        }
+      };
+    }
+  }, [localStatus, handleStatusChange, user?.idleTimeout]);
+
+  // ページがアクティブであり、ステータスがIDLEのときに、操作があったらONLINEに戻す
+  useEffect(() => {
+    const handleActivity = () => {
+      if (localStatus === "IDLE") {
+        handleStatusChange("ONLINE");
+      }
+    };
+
+    window.addEventListener("mousemove", handleActivity);
+    window.addEventListener("keydown", handleActivity);
+
+    return () => {
+      window.removeEventListener("mousemove", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+    };
+  }, [localStatus, handleStatusChange]);
 
   // サインイン処理
   const handleSignIn = async () => {

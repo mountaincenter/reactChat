@@ -25,6 +25,8 @@ export const useUserMutation = () => {
 
   const updateUserMutation = api.user.update.useMutation();
 
+  const updateUserSettingMutation = api.user.updateUserSettings.useMutation();
+
   // Pusherの設定
   useEffect(() => {
     if (status !== "authenticated") return; // 認証されていない場合は何もしない
@@ -61,10 +63,20 @@ export const useUserMutation = () => {
     }
   };
 
+  const updateUserSettings = (settings: {
+    idleTimeout: number;
+    defaultStatus: Status;
+  }) => {
+    if (user?.id) {
+      updateUserSettingMutation.mutate(settings);
+    }
+  };
+
   return {
     user,
     users,
     updateStatus,
+    updateUserSettings,
     refetchUser,
     refetchUsers,
     isLoading,

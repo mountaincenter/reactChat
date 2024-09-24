@@ -21,6 +21,9 @@ export const userHandler = {
         where: {
           id: { not: userId },
         },
+        include: {
+          conversations: true,
+        },
       });
       return users;
     } catch (error) {
@@ -46,6 +49,24 @@ export const userHandler = {
     } catch (error) {
       console.error("Error updating user status:", error);
       throw new Error("Could not update user status");
+    }
+  },
+
+  updateUserSettings: async (
+    userId: string,
+    idleTimeout: number,
+    defaultStatus: Status,
+  ) => {
+    try {
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { idleTimeout, defaultStatus },
+      });
+
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating user settings:", error);
+      throw new Error("Could not update user settings");
     }
   },
 };

@@ -8,6 +8,11 @@ const userUpdateSchema = z.object({
   status: z.nativeEnum(Status),
 });
 
+const userSettingsSchema = z.object({
+  idleTimeout: z.number().min(10000), // 10秒以上の制限
+  defaultStatus: z.nativeEnum(Status), // ステータスはONLINEかMUTE
+});
+
 export const userRouter = createTRPCRouter({
   getUserById: protectedProcedure.query(async ({ ctx }) => {
     const user = await userHandler.getUserById(ctx.session.user.id);
@@ -28,6 +33,17 @@ export const userRouter = createTRPCRouter({
       const updatedUser = await userHandler.updateStatus(
         ctx.session.user.id,
         input.status,
+      );
+      return updatedUser;
+    }),
+
+  updateUserSettings: protectedProcedure
+    .input(userSettingsSchema)
+    .mutation(async ({ ctx, input }) => {
+      const updatedUser = await userHandler.updateUserSettings(
+        ctx.session.user.id,
+        input.idleTimeout,
+        input.defaultStatus,
       );
       return updatedUser;
     }),
