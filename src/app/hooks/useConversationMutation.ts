@@ -23,6 +23,7 @@ export const useConversationMutation = () => {
     enabled: status === "authenticated" && !!conversationId, // 会話IDが存在する場合にのみクエリを有効化
   });
 
+  // mutateAsync を使って非同期処理を待つようにする
   const createConversationMutation = api.conversation.create.useMutation();
   const updateConversationMutation = api.conversation.update.useMutation();
   const deleteConversationMutation = api.conversation.delete.useMutation();
@@ -51,26 +52,32 @@ export const useConversationMutation = () => {
     };
   }, [refetchConversation, status]);
 
-  // 会話の作成
-  const createConversation = (data: {
+  // mutateAsync を使って非同期処理を行うよう修正
+  const createConversation = async (data: {
     title?: string;
     isGroup: boolean;
     participantIds: string[];
   }) => {
-    createConversationMutation.mutate(data); // 新しい会話を作成
+    console.log("Creating conversation with data:", data);
+    try {
+      return createConversationMutation.mutateAsync(data); // 新しい会話を作成し、Promise を返す
+    } catch (error) {
+      console.error("Failed to create converation:", error);
+      throw error;
+    }
   };
 
   // 会話の更新
-  const updateConversation = (
+  const updateConversation = async (
     id: string,
     data: { title?: string; participantIds: string[] },
   ) => {
-    updateConversationMutation.mutate({ id, ...data }); // 会話を更新
+    return updateConversationMutation.mutateAsync({ id, ...data }); // 会話を更新し、Promise を返す
   };
 
   // 会話の削除
-  const deleteConversation = (id: string) => {
-    deleteConversationMutation.mutate(id); // 会話を削除
+  const deleteConversation = async (id: string) => {
+    return deleteConversationMutation.mutateAsync(id); // 会話を削除し、Promise を返す
   };
 
   return {

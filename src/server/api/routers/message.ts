@@ -19,7 +19,7 @@ const fileSchema = z.object({
 });
 
 const messageCreateSchema = z.object({
-  content: z.string(),
+  content: z.string().optional(),
   conversationId: z.string(),
   files: z.array(fileSchema).optional(),
 });
@@ -60,7 +60,7 @@ export const messageRouter = createTRPCRouter({
   update: protectedProcedure
     .input(messageCreateSchema.extend({ id: z.string() }))
     .mutation(async ({ input }) => {
-      return await messageHandler.updateMessage(input.id, input.content);
+      return await messageHandler.updateMessage(input.id, input.content ?? "");
     }),
 
   // メッセージを削除

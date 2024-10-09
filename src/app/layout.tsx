@@ -5,7 +5,7 @@ import { ThemeProvider } from "../components/theme-provider";
 import SessionProviderWrapper from "~/components/SessionProviderWrapper";
 import Head from "next/head";
 import Script from "next/script";
-import PusherBeamsClient from "./PusherBeamsClent";
+import PusherBeamsClient from "../lib/PusherBeamsClent";
 import { Toaster } from "~/components/ui/toaster";
 import { getServerAuthSession } from "~/server/auth";
 

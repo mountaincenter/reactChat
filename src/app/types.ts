@@ -1,10 +1,11 @@
+import type { User, Group, Message, File } from "@prisma/client";
+
 // NextAuthのセッション型
 export interface SessionUser {
   name?: string | null;
   email?: string | null;
   image?: string | null;
   id?: string | null;
-  status?: Status; // ユーザーのステータスを含める
 }
 
 export interface Session {
@@ -12,10 +13,20 @@ export interface Session {
   expires: string; // セッションの有効期限
 }
 
-// ステータスの列挙型
-export enum Status {
-  ONLINE = "ONLINE",
-  OFFLINE = "OFFLINE",
-  IDLE = "IDLE",
-  MUTE = "MUTE",
+interface Conversation {
+  id: string;
+  name: string | null;
+}
+
+export interface UserWithConversations extends User {
+  conversations?: Conversation[]; // conversationsをオプショナルにする
+}
+
+export interface GroupWithConversations extends Group {
+  members: User[];
+  conversations?: Conversation[];
+}
+
+export interface MessageWithFiles extends Message {
+  files: File[];
 }

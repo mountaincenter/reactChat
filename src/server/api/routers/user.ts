@@ -1,17 +1,5 @@
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { userHandler } from "~/server/handlers/userHandler";
-import { Status } from "@prisma/client";
-import { z } from "zod";
-
-// Updateに必要なスキーマ定義
-const userUpdateSchema = z.object({
-  status: z.nativeEnum(Status),
-});
-
-const userSettingsSchema = z.object({
-  idleTimeout: z.number().min(10000), // 10秒以上の制限
-  defaultStatus: z.nativeEnum(Status), // ステータスはONLINEかMUTE
-});
 
 export const userRouter = createTRPCRouter({
   getUserById: protectedProcedure.query(async ({ ctx }) => {
@@ -26,25 +14,4 @@ export const userRouter = createTRPCRouter({
     const users = await userHandler.listUserExcludingSelf(ctx.session.user.id);
     return users;
   }),
-
-  update: protectedProcedure
-    .input(userUpdateSchema)
-    .mutation(async ({ ctx, input }) => {
-      const updatedUser = await userHandler.updateStatus(
-        ctx.session.user.id,
-        input.status,
-      );
-      return updatedUser;
-    }),
-
-  updateUserSettings: protectedProcedure
-    .input(userSettingsSchema)
-    .mutation(async ({ ctx, input }) => {
-      const updatedUser = await userHandler.updateUserSettings(
-        ctx.session.user.id,
-        input.idleTimeout,
-        input.defaultStatus,
-      );
-      return updatedUser;
-    }),
 });
