@@ -14,8 +14,8 @@ const ChatPage = () => {
   );
   const { user } = useUserMutation();
 
-  console.log("selectedConversationId", selectedConversationId);
-  console.log("selectedEntity", selectedEntity);
+  // console.log("selectedConversationId", selectedConversationId);
+  // console.log("selectedEntity", selectedEntity);
 
   const handleEntitySelect = (entityId: string, entity: User | Group) => {
     setSelectedConversationId(entityId);

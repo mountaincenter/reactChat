@@ -5,6 +5,10 @@
 await import("./src/env.js");
 
 /** @type {import("next").NextConfig} */
-const config = {};
+const config = {
+  images: {
+    domains: ["cdn.discordapp.com", "eqxyejlbojqgqvgience.supabase.co"], // ここに許可するホスト名を追加
+  },
+};
 
 export default config;

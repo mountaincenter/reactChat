@@ -27,6 +27,7 @@ export interface GroupWithConversations extends Group {
   conversations?: Conversation[];
 }
 
-export interface MessageWithFiles extends Message {
+export interface MessageWithFilesAndSender extends Message {
   files: File[];
+  sender: User;
 }

@@ -2,6 +2,7 @@
 
 import UserList from "./UserList";
 import GroupList from "./GroupList";
+import CreateGroup from "../Group/CreateGroup";
 import { useConversationLogic } from "~/app/hooks/useConversationLogic";
 import type {
   UserWithConversations,
@@ -26,7 +27,12 @@ const EntityOverview: React.FC<{
   };
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6">
+      {/* Create Group Button */}
+      <div className="absolute left-4 top-4">
+        <CreateGroup />
+      </div>
+
       <UserList
         onSelectEntity={(userId, user) => handleSelectEntity(user, false)}
       />

@@ -49,7 +49,10 @@ export const messageRouter = createTRPCRouter({
         `conversation-${input.conversationId}`,
         "new-message",
         {
-          message: newMessage,
+          message: {
+            ...newMessage,
+            sender: newMessage.sender, // 送信者情報を含める
+          },
         },
       );
 

@@ -1,11 +1,12 @@
 "use client";
 import { api } from "~/trpc/react";
 import { useSession } from "next-auth/react";
-import type { Group, User, Message } from "@prisma/client";
+import type { Group, User, Message, Conversation } from "@prisma/client";
 
 type GroupWithMembers = Group & {
   members: User[];
   messages: Message[];
+  conversations: Conversation[]; // 正しいスペルに修正
 };
 
 // useGroupMutationフックの実装
@@ -46,16 +47,22 @@ export const useGroupMutation = () => {
   const isLoading = isGroupsLoading;
 
   // グループを作成する関数
-  const createGroup = (
+  const createGroup = async (
     name: string,
     isPrivate: boolean,
     memberIds: string[],
   ) => {
-    createGroupMutation.mutate({
-      name,
-      isPrivate,
-      memberIds,
-    });
+    try {
+      const newGroup = await createGroupMutation.mutateAsync({
+        name,
+        isPrivate,
+        memberIds,
+      });
+      return newGroup;
+    } catch (error) {
+      console.error("Error creating group:", error);
+      throw error;
+    }
   };
 
   // グループ名を更新する関数

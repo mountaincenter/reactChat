@@ -1,0 +1,24 @@
+Conversation Model
+
+- 1対1
+  - (その相手との)Conversationが存在しない
+    - UserListの相手をクリックすると ConversationIdが作成される
+      - その時作成されるのは
+      - id
+      - createdAt
+      - groupId(null:default)
+      - isGroup(false:default)
+      - participants(相手ユーザー)
+      - message([]:空配列:default)
+  - conversation.idが付与されるとUserListの相手をクリックするとチャットルームへ移動する
+- 1対多
+  - (そのグループでの)Conversationが存在しない
+    - UserListの相手をクリックすると ConversationIdが作成される
+      - その時作成されるのは
+      - id
+      - createdAt
+      - groupId(クリックしたグループのgroup.id)
+      - isGroup(true)
+      - participants(グループのメンバー:group.members)
+      - message([]:空配列:default)
+  - conversation.idが付与されるとUserListの相手をクリックするとチャットルームへ移動する

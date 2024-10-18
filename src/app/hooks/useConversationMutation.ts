@@ -57,6 +57,7 @@ export const useConversationMutation = () => {
     title?: string;
     isGroup: boolean;
     participantIds: string[];
+    groupId?: string;
   }) => {
     console.log("Creating conversation with data:", data);
     try {

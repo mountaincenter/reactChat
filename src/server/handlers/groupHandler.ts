@@ -79,6 +79,7 @@ export const groupHandler = {
         include: {
           members: true, // メンバー情報も取得
           messages: true, // メッセージ情報も取得
+          conversations: true, //会話情報も取得
         },
       });
       return groups;
