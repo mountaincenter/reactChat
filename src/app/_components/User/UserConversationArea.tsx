@@ -18,33 +18,21 @@ import {
   useMessageMutation,
   uploadFileToSupabase,
 } from "~/app/hooks/useMessageMutation";
-import type { UserWithConversations } from "~/app/types";
+import type { UserWithDetails } from "~/app/types";
 import type { MessageWithFilesAndSender } from "~/app/types";
 import AvatarComponent from "~/components/common/AvatarComponent";
-import { format, isToday, isYesterday } from "date-fns";
-import { ja } from "date-fns/locale";
+import { formatDate } from "~/lib/utils";
 
 interface UserConversationAreaProps {
   conversationId: string;
-  user: UserWithConversations;
+  user: UserWithDetails;
 }
-
-// 日付をフォーマットする関数
-const formatDate = (date: Date) => {
-  if (isToday(date)) {
-    return "今日";
-  } else if (isYesterday(date)) {
-    return "昨日";
-  } else {
-    return format(date, "MM月dd日", { locale: ja });
-  }
-};
 
 const UserConversationArea: React.FC<UserConversationAreaProps> = ({
   conversationId,
   user,
 }) => {
-  const { messages, createMessage, isMessagesLoading } =
+  const { messages, createMessage, markMessageAsRead, isMessagesLoading } =
     useMessageMutation(conversationId);
   const [newMessage, setNewMessage] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -57,7 +45,11 @@ const UserConversationArea: React.FC<UserConversationAreaProps> = ({
 
   useEffect(() => {
     if (messages) {
-      setRealtimeMessages(messages);
+      const messagesWithReadBy = messages.map((message) => ({
+        ...message,
+        readBy: Array.isArray(message.readBy) ? message.readBy : [], // readBy が存在しない場合は空の配列を設定
+      }));
+      setRealtimeMessages(messagesWithReadBy);
     }
   }, [messages]);
 
@@ -73,13 +65,44 @@ const UserConversationArea: React.FC<UserConversationAreaProps> = ({
     const handleMessageReceived = (data: {
       message: MessageWithFilesAndSender;
     }) => {
-      setRealtimeMessages((prevMessages) => [...prevMessages, data.message]);
+      setRealtimeMessages((prevMessages) => {
+        if (prevMessages.some((msg) => msg.id === data.message.id)) {
+          return prevMessages; // 既に存在する場合は何もしない
+        }
+        return [...prevMessages, data.message];
+      });
+    };
+
+    const handleMessageRead = (data: { messageId: string; userId: string }) => {
+      setRealtimeMessages((prevMessages) =>
+        prevMessages.map((message) =>
+          message.id === data.messageId
+            ? {
+                ...message,
+                readBy: Array.isArray(message.readBy)
+                  ? [
+                      ...message.readBy,
+                      {
+                        id: data.userId,
+                        name: "",
+                        email: "",
+                        emailVerified: null,
+                        image: "",
+                      },
+                    ]
+                  : [], // readByが存在しない場合は空配列を設定
+              }
+            : message,
+        ),
+      );
     };
 
     channel.bind("new-message", handleMessageReceived);
+    channel.bind("message-read", handleMessageRead);
 
     return () => {
       channel.unbind("new-message", handleMessageReceived);
+      channel.unbind("message-read", handleMessageRead);
       pusher.unsubscribe(`conversation-${conversationId}`);
     };
   }, [conversationId]);
@@ -90,11 +113,22 @@ const UserConversationArea: React.FC<UserConversationAreaProps> = ({
     }
   }, [realtimeMessages]);
 
+  useEffect(() => {
+    realtimeMessages.forEach((message) => {
+      if (
+        message.senderId !== user?.id &&
+        Array.isArray(message.readBy) &&
+        !message.readBy.some((reader) => reader.id === user.id)
+      ) {
+        void markMessageAsRead(message.id);
+      }
+    });
+  }, [realtimeMessages, user, markMessageAsRead]);
+
   const handleSendMessage = async () => {
     if (newMessage.trim() !== "" || selectedFiles.length > 0) {
       const senderId = user?.id;
 
-      // 複数ファイルのアップロードを実行
       const fileUploads = await Promise.all(
         selectedFiles.map(async (file) => {
           const url = await uploadFileToSupabase(file);
@@ -136,7 +170,7 @@ const UserConversationArea: React.FC<UserConversationAreaProps> = ({
     const messagesToGroup = realtimeMessages || [];
 
     messagesToGroup.forEach((message) => {
-      if (!message || !message.timestamp) return;
+      if (!message?.timestamp) return;
 
       const messageDate = new Date(message.timestamp);
       const formattedDate = formatDate(messageDate);
@@ -171,44 +205,95 @@ const UserConversationArea: React.FC<UserConversationAreaProps> = ({
                 {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`mb-4 flex ${message.senderId === user?.id ? "justify-end" : "justify-start"}`}
+                    className={`mb-4 flex ${
+                      message.senderId === user?.id
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
                   >
                     <div className="flex flex-col">
-                      {/* 自分以外のメッセージの場合、送信者のアイコンを表示 */}
-                      <div>
-                        {message.senderId !== user?.id && message.sender && (
-                          <AvatarComponent entity={message.sender} />
+                      {message.senderId !== user?.id &&
+                        message.sender?.image && (
+                          <div className="flex items-start">
+                            <AvatarComponent
+                              entity={message.sender}
+                              className="mr-2"
+                            />
+                            <div className="flex flex-col">
+                              {message.content && (
+                                <div className="inline-block w-[80%] max-w-[400px] rounded-lg bg-gray-300 p-3 text-black dark:bg-gray-700 dark:text-white">
+                                  <p>{message.content}</p>
+                                </div>
+                              )}
+                              {message.files?.map(
+                                (file) =>
+                                  file.fileType === "IMAGE" && (
+                                    <div key={file.url} className="mt-2">
+                                      <Image
+                                        src={file.url}
+                                        alt="Thumbnail"
+                                        width={128}
+                                        height={128}
+                                        className="cursor-pointer rounded"
+                                        onClick={() =>
+                                          setSelectedImage(file.url)
+                                        }
+                                      />
+                                    </div>
+                                  ),
+                              )}
+                              <p className="text-xs opacity-70">
+                                {new Date(message.timestamp).toLocaleTimeString(
+                                  [],
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  },
+                                )}
+                              </p>
+                            </div>
+                          </div>
                         )}
-                        <div
-                          className={`inline-block max-w-[70%] rounded-lg p-3 ${message.senderId === user?.id ? "bg-blue-500 text-white" : "bg-gray-300 text-black dark:bg-gray-700 dark:text-white"}`}
-                        >
-                          <p>{message.content}</p>
-                          <p className="text-xs opacity-70">
-                            {new Date(message.timestamp).toLocaleTimeString(
-                              [],
-                              {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
-                            )}
-                          </p>
+                      {message.senderId === user?.id && (
+                        <div className="flex flex-col items-end">
+                          {message.content && (
+                            <div className="inline-block w-[80%] max-w-[400px] rounded-lg bg-blue-500 p-3 text-white">
+                              <p>{message.content}</p>
+                            </div>
+                          )}
+                          {message.files?.map(
+                            (file) =>
+                              file.fileType === "IMAGE" && (
+                                <div key={file.url} className="mt-2">
+                                  <Image
+                                    src={file.url}
+                                    alt="Thumbnail"
+                                    width={128}
+                                    height={128}
+                                    className="cursor-pointer rounded"
+                                    onClick={() => setSelectedImage(file.url)}
+                                  />
+                                </div>
+                              ),
+                          )}
+                          <div className="w-[80%] max-w-[400px] text-left text-xs opacity-70">
+                            <p>
+                              {message.readBy &&
+                                message.readBy.length > 0 &&
+                                message.readBy.some(
+                                  (reader) => reader.id !== user.id,
+                                ) && <span className="ml-2">既読</span>}
+                              {new Date(message.timestamp).toLocaleTimeString(
+                                [],
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      {/* 画像ファイルがある場合にサムネイルを表示 */}
-                      {message.files &&
-                        message.files.map(
-                          (file) =>
-                            file.fileType === "IMAGE" && (
-                              <div key={file.url} className="mt-2">
-                                <img
-                                  src={file.url}
-                                  alt="Thumbnail"
-                                  className="h-32 w-32 cursor-pointer rounded"
-                                  onClick={() => setSelectedImage(file.url)} // クリックで拡大画像を表示
-                                />
-                              </div>
-                            ),
-                        )}
+                      )}
                     </div>
                   </div>
                 ))}
@@ -242,7 +327,7 @@ const UserConversationArea: React.FC<UserConversationAreaProps> = ({
         </>
       )}
 
-      <div className="sticky bottom-0 left-0 right-0 w-full border-t p-4">
+      <div className="fixed bottom-0 left-0 right-0 ml-auto w-3/4 border-t p-4 shadow-lg">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -257,7 +342,7 @@ const UserConversationArea: React.FC<UserConversationAreaProps> = ({
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
               setNewMessage(e.target.value)
             }
-            className="flex-1"
+            className="flex-1 backdrop-blur-md backdrop-filter"
           />
 
           <TooltipProvider>

@@ -1,13 +1,20 @@
-import { PrismaClient, type User, type Status } from "@prisma/client";
-import { pusher } from "~/server/service/pusher";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export const userHandler = {
+  // ユーザーIDでユーザー情報を取得
   getUserById: async (userId: string) => {
     try {
       return await prisma.user.findUnique({
         where: { id: userId },
+        include: {
+          conversations: {
+            include: {
+              participants: true, // 会話に参加しているユーザーの情報も含める
+            },
+          },
+        },
       });
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -15,58 +22,25 @@ export const userHandler = {
     }
   },
 
-  listUserExcludingSelf: async (userId: string): Promise<User[]> => {
+  // 自分以外のユーザーリストを取得
+  listUserExcludingSelf: async (userId: string) => {
     try {
       const users = await prisma.user.findMany({
         where: {
           id: { not: userId },
         },
         include: {
-          conversations: true,
+          conversations: {
+            include: {
+              participants: true,
+            },
+          },
         },
       });
       return users;
     } catch (error) {
       console.error("Error listing users:", error);
       throw new Error("Could not list users");
-    }
-  },
-
-  updateStatus: async (userId: string, status: Status) => {
-    try {
-      const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: { status },
-      });
-
-      void pusher.trigger("user-channel", "status-update", {
-        userId: updatedUser.id,
-        status: updatedUser.status,
-      });
-
-      // statusフィールドのみを更新
-      return updatedUser;
-    } catch (error) {
-      console.error("Error updating user status:", error);
-      throw new Error("Could not update user status");
-    }
-  },
-
-  updateUserSettings: async (
-    userId: string,
-    idleTimeout: number,
-    defaultStatus: Status,
-  ) => {
-    try {
-      const updatedUser = await prisma.user.update({
-        where: { id: userId },
-        data: { idleTimeout, defaultStatus },
-      });
-
-      return updatedUser;
-    } catch (error) {
-      console.error("Error updating user settings:", error);
-      throw new Error("Could not update user settings");
     }
   },
 };

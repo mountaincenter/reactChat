@@ -18,8 +18,9 @@ interface Conversation {
   name: string | null;
 }
 
-export interface UserWithConversations extends User {
+export interface UserWithDetails extends User {
   conversations?: Conversation[]; // conversationsをオプショナルにする
+  unreadCount?: number;
 }
 
 export interface GroupWithConversations extends Group {
@@ -30,4 +31,5 @@ export interface GroupWithConversations extends Group {
 export interface MessageWithFilesAndSender extends Message {
   files: File[];
   sender: User;
+  readBy: User[];
 }

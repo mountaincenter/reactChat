@@ -7,12 +7,12 @@ import { ScrollArea } from "~/components/ui/scroll-area";
 import { Search } from "lucide-react";
 import UserItem from "./UserItem";
 import { useUserConversationMutation } from "~/app/hooks/useUserConversationMutation";
-import type { UserWithConversations } from "~/app/types";
+import type { UserWithDetails } from "~/app/types";
 import { useSession } from "next-auth/react";
 
 interface UserListProps {
-  users: UserWithConversations[];
-  onSelectUser: (conversationId: string, user: UserWithConversations) => void;
+  users: UserWithDetails[];
+  onSelectUser: (conversationId: string, user: UserWithDetails) => void;
   searchPlaceholder: string;
   noUsersMessage: string;
 }
@@ -27,7 +27,7 @@ const UserList: React.FC<UserListProps> = ({
   const { createUserConversation } = useUserConversationMutation();
   const { data: session } = useSession(); // 現在のユーザー情報を取得
 
-  const handleUserClick = async (user: UserWithConversations) => {
+  const handleUserClick = async (user: UserWithDetails) => {
     if (!session?.user?.id) return; // セッション情報がない場合は何もしない
 
     let conversationId = user.conversations?.[0]?.id;

@@ -57,6 +57,7 @@ model User {
     messages      Message[] @relation("UserMessages")
     conversations Conversation[] @relation("UserConversations")
     groups        Group[]   @relation("GroupUsers")
+    readByUsers   Message[] @relation("MessageReadUsers")
 }
 
 model Group {
@@ -92,6 +93,7 @@ model Message {
     group         Group?       @relation("GroupMessages", fields: [groupId], references: [id])
     groupId       String?
     files         File[]       @relation("MessageFiles") // File とのリレーションを定義
+    readBy        User[]       @relation("MessageReadUsers") //既読ユーザーのリレーションを定義
 }
 
 model Conversation {

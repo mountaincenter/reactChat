@@ -23,7 +23,7 @@ export const useUserConversationMutation = () => {
 
   // Pusherのリアルタイム更新
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (status !== "authenticated" || !conversationId) return;
 
     const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
@@ -45,7 +45,7 @@ export const useUserConversationMutation = () => {
       channel.unbind("conversation-update", handleConversationUpdate);
       pusher.unsubscribe("conversation-channel");
     };
-  }, [conversation, refetchConversation, status]);
+  }, [conversationId, refetchConversation, status]);
 
   // 新しい会話を作成または既存の会話を取得する関数
   const createUserConversation = async (

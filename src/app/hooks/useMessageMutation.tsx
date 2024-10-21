@@ -52,6 +52,7 @@ export const useMessageMutation = (conversationId: string) => {
   const createMessageMutation = api.message.create.useMutation();
   const updateMessageMutation = api.message.update.useMutation();
   const deleteMessageMutation = api.message.delete.useMutation();
+  const markAsReadMutation = api.message.markAsRead.useMutation();
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -62,14 +63,16 @@ export const useMessageMutation = (conversationId: string) => {
 
     const channel = pusher.subscribe(`message-channel-${conversationId}`);
 
-    const handleMessageUpdate = async (_data: { conversationId: string }) => {
+    const handleMessageUpdate = async () => {
       await refetchMessages();
     };
 
-    channel.bind("message-update", handleMessageUpdate);
+    channel.bind("new-message", handleMessageUpdate);
+    channel.bind("message-read", handleMessageUpdate);
 
     return () => {
-      channel.unbind("message-update", handleMessageUpdate);
+      channel.unbind("new-message", handleMessageUpdate);
+      channel.unbind("message-read", handleMessageUpdate);
       pusher.unsubscribe(`message-channel-${conversationId}`);
     };
   }, [refetchMessages, conversationId, status]);
@@ -86,16 +89,20 @@ export const useMessageMutation = (conversationId: string) => {
     createMessageMutation.mutate({
       content: data.content,
       conversationId,
-      files: data.files || [], // ここでファイルのURLを指定
+      files: data.files ?? [],
     });
   };
 
-  const updateMessage = (id: string, content: string) => {
-    updateMessageMutation.mutate({ id, content, conversationId });
+  const updateMessage = (messageId: string, content: string) => {
+    updateMessageMutation.mutate({ messageId, content });
   };
 
   const deleteMessage = (id: string) => {
     deleteMessageMutation.mutate(id);
+  };
+
+  const markMessageAsRead = async (messageId: string) => {
+    markAsReadMutation.mutate({ messageId, conversationId });
   };
 
   return {
@@ -103,6 +110,7 @@ export const useMessageMutation = (conversationId: string) => {
     createMessage,
     updateMessage,
     deleteMessage,
+    markMessageAsRead,
     isMessagesLoading,
   };
 };

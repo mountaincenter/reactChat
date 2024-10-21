@@ -1,10 +1,10 @@
 "use client";
 
 import AvatarComponent from "~/components/common/AvatarComponent";
-import type { UserWithConversations } from "~/app/types";
+import type { UserWithDetails } from "~/app/types";
 
 interface UserItemProps {
-  user: UserWithConversations;
+  user: UserWithDetails;
 }
 
 const UserItem: React.FC<UserItemProps> = ({ user }) => {
@@ -13,9 +13,14 @@ const UserItem: React.FC<UserItemProps> = ({ user }) => {
       <div className="relative">
         <AvatarComponent entity={user} />
       </div>
-      <div>
+      <div className="flex-1">
         <h2 className="flex-sm">{user.name}</h2>
       </div>
+      {user.unreadCount && user.unreadCount > 0 ? (
+        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-sm text-white">
+          {user.unreadCount}
+        </div>
+      ) : null}
     </div>
   );
 };
