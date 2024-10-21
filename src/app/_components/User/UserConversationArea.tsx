@@ -327,7 +327,7 @@ const UserConversationArea: React.FC<UserConversationAreaProps> = ({
         </>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 ml-auto w-3/4 border-t p-4 shadow-lg">
+      <div className="sticky bottom-0 left-0 right-0 w-full border-t bg-background p-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();

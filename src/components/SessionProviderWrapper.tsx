@@ -24,10 +24,13 @@ const SessionProviderWrapper: React.FC<SessionProviderWrapperProps> = ({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex h-screen w-full flex-col">
-            <Header /> {/* Header at the top */}
-            <div className="flex w-full justify-center overflow-auto">
-              {children} {/* Main content below */}
+          <div className="flex h-screen flex-col overflow-hidden">
+            {/* Header固定 */}
+            <Header />
+
+            {/* コンテンツ部分も固定でスクロール不可 */}
+            <div className="flex-grow overflow-hidden pt-[52px]">
+              {children} {/* Main content below Header */}
             </div>
           </div>
         </ThemeProvider>

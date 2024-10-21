@@ -8,6 +8,7 @@ import Script from "next/script";
 import PusherBeamsClient from "../lib/PusherBeamsClent";
 import { Toaster } from "~/components/ui/toaster";
 import { getServerAuthSession } from "~/server/auth";
+import { cn } from "~/lib/utils";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -25,7 +26,7 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await getServerAuthSession();
   return (
-    <html lang="en" className={`${GeistSans.variable}`}>
+    <html lang="en" className={cn(GeistSans.variable)}>
       <Head>
         {/* 他の head 内のメタ情報 */}
         <title>{metadata.title?.toString() ?? ""}</title>{" "}
